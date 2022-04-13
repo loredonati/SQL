@@ -1,0 +1,1269 @@
+-- With an Accounting Databasebuild, I built two queries and inserted the results into tmp tables through a stored procedure 
+-- to create the Profit and Loss (P&L) and Balance Sheet (B/S) statements.
+
+USE H_Accounting;
+
+DROP PROCEDURE IF EXISTS H_Accounting.sp_ldonati;
+-- The tpycal delimiter for Stored procedures is a double dollar sign
+DELIMITER $$
+
+
+	CREATE PROCEDURE H_Accounting.sp_ldonati(varCalendarYear YEAR)
+	BEGIN
+
+	-- We can define variables inside of our procedure
+	DECLARE varRevenue 		DOUBLE DEFAULT 0;
+    DECLARE varRevenue2		DOUBLE DEFAULT 0;
+	DECLARE varRevenue3		DOUBLE DEFAULT 0;
+	DECLARE varReturn 		DOUBLE DEFAULT 0;
+    DECLARE varReturn2 		DOUBLE DEFAULT 0;
+	DECLARE varCOGS 		DOUBLE DEFAULT 0;
+    DECLARE varCOGS2 		DOUBLE DEFAULT 0;
+	DECLARE varGrossProfit 	DOUBLE DEFAULT 0;
+    DECLARE varGrossProfit2	DOUBLE DEFAULT 0;
+	DECLARE varSellingExp 	DOUBLE DEFAULT 0;
+    DECLARE varSellingExp2 	DOUBLE DEFAULT 0;
+	DECLARE varAdminExp 	DOUBLE DEFAULT 0;
+    DECLARE varAdminExp2 	DOUBLE DEFAULT 0;
+	DECLARE varOtherExp 	DOUBLE DEFAULT 0;
+    DECLARE varOtherExp2 	DOUBLE DEFAULT 0;
+	DECLARE varOtherIncome 	DOUBLE DEFAULT 0;
+    DECLARE varOtherIncome2	DOUBLE DEFAULT 0;
+    DECLARE varGPSE      	DOUBLE DEFAULT 0;
+    DECLARE varGPSE2      	DOUBLE DEFAULT 0;
+    DECLARE varGPSEOE       DOUBLE DEFAULT 0;
+    DECLARE varGPSEOE2      DOUBLE DEFAULT 0;
+	DECLARE varEBT 			DOUBLE DEFAULT 0;
+    DECLARE varEBT2			DOUBLE DEFAULT 0;
+	DECLARE varIncometax 	DOUBLE DEFAULT 0;
+    DECLARE varIncometax2 	DOUBLE DEFAULT 0;
+	DECLARE varOthertax 	DOUBLE DEFAULT 0;
+    DECLARE varOthertax2 	DOUBLE DEFAULT 0;
+	DECLARE varNetincome 	DOUBLE DEFAULT 0;
+    DECLARE varNetincome2 	DOUBLE DEFAULT 0;
+
+
+	-- Revenue calculation
+	SELECT SUM(IFNULL(jeli.credit, 0)) INTO varRevenue 
+    FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 68;
+-- revenue2
+SELECT SUM(IFNULL(jeli.credit, 0)) INTO varRevenue2
+    FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 68;
+
+-- revenue2
+SELECT SUM(IFNULL(jeli.credit, 0)) INTO varRevenue3
+    FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 4
+        AND ac.profit_loss_section_id = 68;
+
+	-- Returns calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varReturn FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 69;
+        
+-- Returns calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varReturn2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 69;
+
+	-- COGS calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varCOGS FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 74;
+        
+-- COGS2 calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varCOGS2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 74;
+        
+-- Gross Profit calculation
+	SELECT 
+	varRevenue -SUM(IFNULL(jeli.debit, 0)) 
+INTO varGrossProfit FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 74;
+        
+-- Gross Profit2 calculation
+	SELECT 
+	varRevenue2 -SUM(IFNULL(jeli.debit, 0)) 
+INTO varGrossProfit2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 74;
+        
+	-- Selling Expense calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varSellingExp FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 76;
+-- Selling Expense calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varSellingExp2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear -1
+        AND ac.profit_loss_section_id = 76;
+
+	-- Adiministrative Expense
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varAdminExp FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 75;
+-- Adiministrative Expense
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varAdminExp2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear-1
+        AND ac.profit_loss_section_id = 75;
+        
+	-- Other Expense calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherExp FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 77;
+        
+-- Other Expense calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherExp2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear-1
+        AND ac.profit_loss_section_id = 77;
+        
+	-- Other Income Calculation
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherIncome FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 78;
+-- Other Income Calculation
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherIncome2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear-1
+        AND ac.profit_loss_section_id = 78;
+
+        
+-- Gross Profit minus Selling Expense calculation
+SELECT varGrossProfit - SUM(IFNULL(jeli.debit, 0)) 
+INTO varGPSE FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 76;
+
+-- Gross Profit minus Selling Expense calculation
+SELECT varGrossProfit2 - SUM(IFNULL(jeli.debit, 0)) 
+INTO varGPSE2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 76;
+
+-- GPSEAE
+select varGPSE - sum(IFNULL(jeli.debit, 0)) into varGPSEOE
+from H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 77;
+        
+-- GPSEAE2
+select varGPSE2 - sum(IFNULL(jeli.debit, 0)) into varGPSEOE2
+from H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 77;
+        
+-- EBT
+SELECT  varGPSEOE - SUM(IFNULL(jeli.debit, 0)) 
+INTO varEBT FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 78;
+
+-- EBT2
+SELECT  varGPSEOE2 - SUM(IFNULL(jeli.debit, 0)) 
+INTO varEBT2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 78;
+        
+	-- Income tax Calculation
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varIncomeTax
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear
+     and ac.profit_loss_section_id = 79;
+-- Income tax Calculation
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varIncomeTax2
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear-1
+     and ac.profit_loss_section_id = 79;
+     
+	-- Other Tax
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varOtherTax
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear
+     and ac.profit_loss_section_id = 80;
+-- Other Tax
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varOtherTax2
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear-1
+     and ac.profit_loss_section_id = 80;
+
+-- this query is only for Tax incurring year! in this case, it's 2016.
+SELECT 
+    varEBT - SUM(jeli.debit) into varNetIncome
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear
+     and ac.profit_loss_section_id = 79
+     ;     
+
+        
+-- Creating table  
+DROP TABLE IF EXISTS H_Accounting.ldonati_tmp;	
+CREATE TABLE H_Accounting.ldonati_tmp
+		(number VARCHAR(50), 
+		 label VARCHAR(50), 
+	     amount VARCHAR(50),
+         amount2 VARCHAR(50),
+         percent VARCHAR(50)
+         
+		);
+
+	
+        
+
+  -- Now we insert the a header for the report
+  INSERT INTO H_Accounting.ldonati_tmp 
+		   (number, label, amount, amount2, percent)
+	VALUES (1, 'PROFIT AND LOSS STATEMENT', varCalendarYear -1, varCalendarYear, 'VS LAST YEAR'),
+    ('*********', '**********************', '********', '*********', '********'),
+	(2, 'Revenue', format(varRevenue2, 0), format(varRevenue, 0), format(((varRevenue/varRevenue2)*100),2)),
+	(3, 'Returns, Refunds, Discounts', format(IFNULL(varReturn2,0),0), format(IFNULL(varReturn2,0),0), '-'),
+	(4, 'Cost of goods sold', format(varCOGS2,0), format(varCOGS,0), format(((varCOGS/varCOGS2)*100),2)),
+	(5, 'Gross Profit (Loss)', format(varGrossProfit2, 0), format(varGrossProfit, 0), format(((varGrossProfit/varGrossProfit2)*100),2)),
+	(6, 'Selling Expenses', format(varSellingExp2, 0), format(varSellingExp, 0), '-'),
+	(7, 'Administrative Expenses', format(IFNULL(varAdminExp2,0),0), format(IFNULL(varAdminExp,0),0), '-'),
+	(8, 'Other Expenses', format(IFNULL(varOtherExp2,0),0), format(IFNULL(varOtherExp,0),0), '-'),
+	(9, 'Other Income' , format(IFNULL(varOtherIncome2,0),0), format(IFNULL(varOtherIncome,0),0), '-'),
+	(10, 'Earnings before taxes (EBT)', format(IFNULL(varEBT2,0),0), format(IFNULL(varEBT,0),0), format(((varEBT/varEBT2)*100),2)),
+	(11, 'Income Tax', format(IFNULL(varIncomeTax2,0),0), format(IFNULL(varIncomeTax,0),0), '-'),
+	(12, 'Other Tax', format(IFNULL(varOtherTax2,0),0), format(IFNULL(varOtherTax,0),0), '-'),
+    (13, 'Net Income', format(varEBT2-IFNULL(varIncomeTax2,0),0), format(varEBT-IFNULL(varIncomeTax,0),0), format((varEBT-ifnull(varIncomeTax,0))/(varEBT2-ifnull(varIncomeTax2,0))*100,2)),
+    ('*********', '**********************', '********', '*********', '********'),
+    ('-', 'Financial Metrics', '-', '-', '-'),
+    (15, 'Sales Growth Rate', '-', '-', format(((varRevenue-varRevenue2)/varRevenue2)*100,2)),
+    (16, 'Marginal Profit Ratio', '-', '-', format(((varRevenue-varCOGS)/varRevenue)*100,2))
+    ;
+           
+END $$
+DELIMITER ;
+# THE LINE ABOVES CHANGES BACK OUR DELIMETER TO OUR USUAL ;
+-- IF YOU CHOOSE YEAR 2016, YOU MAKE SURE TO INCLUDE  
+CALL H_Accounting.sp_ldonati(2019);
+
+SELECT * FROM H_Accounting.ldonati_tmp;
+
+---------------------------------------------------------------------------
+#create BS table
+DROP PROCEDURE IF EXISTS H_Accounting.sp_ldonati;
+DROP TABLE IF EXISTS H_Accounting.ldonati_tmp;
+
+-- The tpycal delimiter for Stored procedures is a double dollar sign
+DELIMITER $$
+
+	CREATE PROCEDURE H_Accounting.sp_ldonati(varCalendarYear YEAR)
+	BEGIN
+  
+	-- Define variables inside procedure
+    DECLARE varCA 			DOUBLE DEFAULT 0;
+    DECLARE varCA2 			DOUBLE DEFAULT 0;
+    DECLARE varFA 			DOUBLE DEFAULT 0;
+    DECLARE varFA2 			DOUBLE DEFAULT 0;
+    DECLARE varDA 			DOUBLE DEFAULT 0;
+    DECLARE varDA2			DOUBLE DEFAULT 0;
+    DECLARE varCL			DOUBLE DEFAULT 0;
+    DECLARE varCL2			DOUBLE DEFAULT 0;
+    DECLARE varLLL 			DOUBLE DEFAULT 0;
+    DECLARE varLLL2 		DOUBLE DEFAULT 0;
+    DECLARE varDL 			DOUBLE DEFAULT 0;
+    DECLARE varDL2 			DOUBLE DEFAULT 0;
+    DECLARE varEQ			DOUBLE DEFAULT 0;
+    DECLARE varEQ2			DOUBLE DEFAULT 0;
+    DECLARE varRetainedEarnings	DOUBLE DEFAULT 0;
+    DECLARE varTotalAsset	DOUBLE DEFAULT 0;
+    DECLARE varTotalAsset2	DOUBLE DEFAULT 0;
+    DECLARE varTotalLiabi	DOUBLE DEFAULT 0;
+    DECLARE varTotalLiabi2	DOUBLE DEFAULT 0;
+    DECLARE varEquiLiabi	DOUBLE DEFAULT 0;
+    DECLARE varEquiLiabi2	DOUBLE DEFAULT 0;
+    DECLARE varRevenue 		DOUBLE DEFAULT 0;
+    DECLARE varRevenue2		DOUBLE DEFAULT 0;
+	DECLARE varRevenue3		DOUBLE DEFAULT 0;
+	DECLARE varReturn 		DOUBLE DEFAULT 0;
+    DECLARE varReturn2 		DOUBLE DEFAULT 0;
+	DECLARE varCOGS 		DOUBLE DEFAULT 0;
+    DECLARE varCOGS2 		DOUBLE DEFAULT 0;
+	DECLARE varGrossProfit 	DOUBLE DEFAULT 0;
+    DECLARE varGrossProfit2	DOUBLE DEFAULT 0;
+	DECLARE varSellingExp 	DOUBLE DEFAULT 0;
+    DECLARE varSellingExp2 	DOUBLE DEFAULT 0;
+	DECLARE varAdminExp 	DOUBLE DEFAULT 0;
+    DECLARE varAdminExp2 	DOUBLE DEFAULT 0;
+	DECLARE varOtherExp 	DOUBLE DEFAULT 0;
+    DECLARE varOtherExp2 	DOUBLE DEFAULT 0;
+	DECLARE varOtherIncome 	DOUBLE DEFAULT 0;
+    DECLARE varOtherIncome2	DOUBLE DEFAULT 0;
+    DECLARE varGPSE      	DOUBLE DEFAULT 0;
+    DECLARE varGPSE2      	DOUBLE DEFAULT 0;
+    DECLARE varGPSEOE       DOUBLE DEFAULT 0;
+    DECLARE varGPSEOE2      DOUBLE DEFAULT 0;
+	DECLARE varEBT 			DOUBLE DEFAULT 0;
+    DECLARE varEBT2			DOUBLE DEFAULT 0;
+	DECLARE varIncometax 	DOUBLE DEFAULT 0;
+    DECLARE varIncometax2 	DOUBLE DEFAULT 0;
+	DECLARE varOthertax 	DOUBLE DEFAULT 0;
+    DECLARE varOthertax2 	DOUBLE DEFAULT 0;
+	DECLARE varNetincome 	DOUBLE DEFAULT 0;
+    DECLARE varNetincome2 	DOUBLE DEFAULT 0;
+
+	-- Calculate the value and store them into the variables declared
+    #varCA
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varCA
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'CA'
+            AND je.debit_credit_balanced = 1;
+            
+	#varCA2
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varCA2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear -1
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'CA'
+            AND je.debit_credit_balanced = 1;
+
+    #varFA
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varFA
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear   
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'FA'
+            AND je.debit_credit_balanced = 1;
+            
+	#varFA2
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varFA2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'FA'
+            AND je.debit_credit_balanced = 1;
+
+    #varDA
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varDA
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear   
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'DA'
+            AND je.debit_credit_balanced = 1;
+            
+	#varDA2
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varDA2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'DA'
+            AND je.debit_credit_balanced = 1;
+
+    #varCL
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varCL
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'CL'
+            AND je.debit_credit_balanced = 1;	
+            
+	#varCL2
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varCL2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'CL'
+            AND je.debit_credit_balanced = 1;	
+
+    #varLLL
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varLLL
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'LLL'
+            AND je.debit_credit_balanced = 1;
+            
+	 #varLLL2
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varLLL2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1 
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'LLL'
+            AND je.debit_credit_balanced = 1;
+
+    #varDL
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varDL
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear 
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'DL'
+            AND je.debit_credit_balanced = 1;
+            
+	#varDL2
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varDL2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'DL'
+            AND je.debit_credit_balanced = 1;
+
+    #varEQ
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varEQ
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear   
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'EQ'
+            AND je.debit_credit_balanced = 1;
+            
+	#varEQ2
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varEQ2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1   
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code = 'EQ'
+            AND je.debit_credit_balanced = 1;
+
+    #varTotalAsset
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varTotalAsset
+            FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear 
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code IN ('CA','FA','DA')
+            AND je.debit_credit_balanced = 1;
+            
+	#varTotalAsset2
+	SELECT SUM(IFNULL(jeli.debit,0) - IFNULL(jeli.credit,0)) INTO varTotalAsset2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1 
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code IN ('CA','FA','DA')
+            AND je.debit_credit_balanced = 1;
+
+    #varTotalLiabi
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varTotalLiabi
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code IN ('CL','LLL','DL')
+            AND je.debit_credit_balanced = 1;
+            
+	#varTotalLiabi2
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varTotalLiabi2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1  
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code IN ('CL','LLL','DL')
+            AND je.debit_credit_balanced = 1;
+	
+        #varEquiLiabi
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varEquiLiabi
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear 
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code  IN ('CL','LLL','DL', 'EQ')
+            AND je.debit_credit_balanced = 1;
+            
+	#varEquiLiabi2
+	SELECT SUM(IFNULL(jeli.debit,0)*-1 + IFNULL(jeli.credit,0)) INTO varEquiLiabi2
+            
+		FROM journal_entry_line_item AS jeli
+			INNER JOIN `account` 			AS ac ON ac.account_id = jeli.account_id
+			INNER JOIN journal_entry 		AS je ON je.journal_entry_id = jeli.journal_entry_id
+			INNER JOIN statement_section	AS ss ON ss.statement_section_id = ac.balance_sheet_section_id
+            
+		WHERE YEAR(je.entry_date) <= varCalendarYear-1 
+			AND ac.balance_sheet_section_id <> 0
+            AND ss.statement_section_code  IN ('CL','LLL','DL', 'EQ')
+            AND je.debit_credit_balanced = 1;
+            
+
+-- Revenue calculation
+	SELECT SUM(IFNULL(jeli.credit, 0)) INTO varRevenue 
+    FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 68;
+-- revenue2
+SELECT SUM(IFNULL(jeli.credit, 0)) INTO varRevenue2
+    FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 68;
+
+-- revenue3
+SELECT SUM(IFNULL(jeli.credit, 0)) INTO varRevenue3
+    FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 4
+        AND ac.profit_loss_section_id = 68;
+
+	-- Returns calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varReturn FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 69;
+        
+-- Returns2 calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varReturn2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 69;
+
+	-- COGS calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varCOGS FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 74;
+        
+-- COGS2 calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varCOGS2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 74;
+        
+-- Gross Profit calculation
+	SELECT 
+	varRevenue -SUM(IFNULL(jeli.debit, 0)) 
+INTO varGrossProfit FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 74;
+        
+-- Gross Profit2 calculation
+	SELECT 
+	varRevenue2 -SUM(IFNULL(jeli.debit, 0)) 
+INTO varGrossProfit2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 74;
+        
+	-- Selling Expense calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varSellingExp FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 76;
+        
+-- Selling Expense calculation2
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varSellingExp2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear -1
+        AND ac.profit_loss_section_id = 76;
+
+	-- Adiministrative Expense
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varAdminExp FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 75;
+        
+-- Adiministrative Expense2
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varAdminExp2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear-1
+        AND ac.profit_loss_section_id = 75;
+        
+	-- Other Expense calculation
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherExp FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 77;
+        
+-- Other Expense calculation2
+	SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherExp2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear-1
+        AND ac.profit_loss_section_id = 77;
+        
+	-- Other Income Calculation
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherIncome FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 78;
+        
+        
+-- Other Income Calculation2
+    SELECT 
+    SUM(IFNULL(jeli.debit, 0))
+INTO varOtherIncome2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear-1
+        AND ac.profit_loss_section_id = 78;
+
+        
+-- Gross Profit minus Selling Expense calculation
+SELECT varGrossProfit - SUM(IFNULL(jeli.debit, 0)) 
+INTO varGPSE FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 76;
+
+-- Gross Profit minus Selling Expense calculation2
+SELECT varGrossProfit2 - SUM(IFNULL(jeli.debit, 0)) 
+INTO varGPSE2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 76;
+
+-- GPSEAE
+select varGPSE - sum(IFNULL(jeli.debit, 0)) into varGPSEOE
+from H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 77;
+        
+-- GPSEAE2
+select varGPSE2 - sum(IFNULL(jeli.debit, 0)) into varGPSEOE2
+from H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 77;
+        
+-- EBT
+SELECT  varGPSEOE - SUM(IFNULL(jeli.debit, 0)) 
+INTO varEBT FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear
+        AND ac.profit_loss_section_id = 78;
+
+-- EBT2
+SELECT  varGPSEOE2 - SUM(IFNULL(jeli.debit, 0)) 
+INTO varEBT2 FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+    YEAR(je.entry_date) = varCalendarYear - 1
+        AND ac.profit_loss_section_id = 78;
+        
+	-- Income tax Calculation
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varIncomeTax
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear
+     and ac.profit_loss_section_id = 79;
+     
+-- Income tax Calculation2
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varIncomeTax2
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear-1
+     and ac.profit_loss_section_id = 79;
+     
+	-- Other Tax
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varOtherTax
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear
+     and ac.profit_loss_section_id = 80;
+-- Other Tax2
+SELECT 
+    SUM(IFNULL(jeli.debit, 0)) into varOtherTax2
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear-1
+     and ac.profit_loss_section_id = 80;
+
+-- NetIncome
+SELECT 
+    varEBT - SUM(jeli.debit) into varNetIncome
+FROM
+    H_Accounting.journal_entry_line_item AS jeli
+        INNER JOIN
+    H_Accounting.account AS ac ON ac.account_id = jeli.account_id
+        INNER JOIN
+    H_Accounting.journal_entry AS je ON je.journal_entry_id = jeli.journal_entry_id
+        INNER JOIN
+    H_Accounting.statement_section AS ss ON ss.statement_section_id = ac.profit_loss_section_id
+WHERE
+     YEAR(je.entry_date) = varCalendarYear
+     and ac.profit_loss_section_id = 79
+     ;
+            
+	-- Create BS table
+	CREATE TABLE H_Accounting.ldonati_tmp
+		(	number VARCHAR(50), 
+			label VARCHAR(50), 
+			amount VARCHAR(50),
+			amount2 VARCHAR(50),
+            percent VARCHAR(50)
+		);
+  
+	-- Insert the header for the report
+	INSERT INTO H_Accounting.ldonati_tmp 
+			(number, label, amount, amount2, percent)
+			VALUES (1, 'BALANCE SHEET', varCalendarYear-1, varCalendarYear, 'VS LAST YEAR'),
+            ('*********', '**************', '********', '*********', '********'),
+			(2, 'Current Assets', format(IFNULL(varCA2, 0),0), format(IFNULL(varCA, 0),0), '-'),
+            (3, 'Fixed Assets', format(IFNULL(varFA2, 0),0), format(IFNULL(varFA, 0),0), '-'),
+            (4, 'Deferred Assets', format(IFNULL(varDA2, 0),0), format(IFNULL(varDA, 0),0), '-'),
+            (5, 'Total Assets', format(IFNULL(varTotalAsset2, 0),0), format(IFNULL(varTotalAsset, 0),0), format((IFNULL(varTotalAsset, 0)/IFNULL(varTotalAsset2, 0))*100,2)),
+            (6, 'Current Liabilities', format(IFNULL(varCL2, 0),0), format(IFNULL(varCL, 0),0), '-'),
+            (7, 'Long-term Liabilities', format(IFNULL(varLLL2, 0),0), format(IFNULL(varLLL, 0),0), '-'),
+			(8, 'Deferred Liabilities' , format(IFNULL(varDL2, 0),0), format(IFNULL(varDL, 0),0), '-'),
+            (9, 'Total Liabilities', format(IFNULL(varTotalLiabi2, 0),0), format(IFNULL(varTotalLiabi, 0),0), format((IFNULL(varTotalLiabi, 0)/IFNULL(varTotalLiabi2, 0))*100,2)),
+            (10, 'Equity', format(IFNULL(varEQ2, 0),0), format(IFNULL(varEQ, 0),0), '-'),
+            (11, 'Total Equity and Liabilities', format(IFNULL(varEquiLiabi2, 0),0), format(IFNULL(varEquiLiabi,0),0),format((IFNULL(varEquiLiabi, 0)/IFNULL(varEquiLiabi2, 0))*100,2)),
+			(12, 'A = L + E', format(varTotalAsset2-varEquiLiabi2,0)*-1, format(varTotalAsset-varEquiLiabi,0)*-1, '-'),
+            ('*********', '**********************', '********', '*********', '********'),
+            ('-', 'Financial Metrics', '-', '-', '-'),
+            (13, 'Reatained Earnings', format(varEBT2-IFNULL(varIncomeTax2,0),0), format(varEBT-IFNULL(varIncomeTax,0),0), '-'),
+            (14, 'Equity Growth Rate', format(varEQ2,0), format(varEQ,0), format(((varEQ-varEQ2)/varEQ2)*100,2))
+            ;
+            
+  END $$
+
+DELIMITER ;          
+
+#call stored procedures for BS
+CALL H_Accounting.sp_ldonati(2019);
+	
+SELECT * FROM H_Accounting.ldonati_tmp;  
